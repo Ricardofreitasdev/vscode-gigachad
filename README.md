@@ -1,63 +1,45 @@
-# gigachad README
+# Gigachad
 
-Teste inicial da extensao do vscode
+This is a VSCode extension that provides useful functionalities for developers. The extension automates and streamlines the execution of scripts, package manager detection, and Docker integration, all directly within your development environment.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- **Detects Package Manager:** Identifies whether the project uses `npm` or `yarn` to run scripts.
+- **Script Execution:** Allows running scripts defined in the `package.json` with the correct package manager.
+- **Docker Integration:** Supports executing commands inside Docker containers.
+- **Dynamic Commands:** Adapts commands based on context (for example, executing via `docker exec` or directly in the terminal).
 
-For example if there is an image subfolder under your extension project workspace:
+### Example of Custom Configuration:
 
-\!\[feature X\]\(images/feature-x.png\)
+In the VSCode configuration file (`settings.json`), add the custom scripts you want to execute. Here is an example:
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+```json
+"gigachad.customScripts": [
+  {
+    "name": "Project",
+    "command": "./vendor/bin/sail up -d"
+  },
+  {
+    "name": "Project - Test PHP",
+    "command": "php artisan test"
+  },
+  {
+    "name": "Project - Setup",
+    "command": "test",
+    "group": "example-app"
+  }
+]
+```
 
-## Requirements
+Here’s the table in Markdown format explaining the JSON configuration in English:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+markdown
+Copiar código
 
-## Extension Settings
+### Explanation of the JSON Configuration
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-- `myExtension.enable`: Enable/disable this extension.
-- `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-- [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-- Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-- Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-- Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-- [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-- [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+| Field     | Description                                                                                                 | Example                                           |
+| --------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `name`    | The name of the custom script that will appear in the VSCode interface.                                     | `"Project"`, `"Project - Test PHP"`               |
+| `command` | The command to be executed in the terminal when the script is triggered. It can be any valid shell command. | `"./vendor/bin/sail up -d"`, `"php artisan test"` |
+| `group`   | (Optional) The group to which the script belongs. This helps in organizing scripts into categories.         | `"example-app"`                                   |

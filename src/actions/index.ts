@@ -84,3 +84,17 @@ export function getWorkspaceFolder() {
     return null;
   }
 }
+
+export function getPackageManager(): string {
+  const projectPath = vscode.workspace.workspaceFolders
+    ? vscode.workspace.workspaceFolders[0].uri.fsPath
+    : "";
+
+  if (fs.existsSync(path.join(projectPath, "yarn.lock"))) {
+    return "yarn";
+  }
+  if (fs.existsSync(path.join(projectPath, "package-lock.json"))) {
+    return "npm";
+  }
+  return "npm";
+}

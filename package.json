@@ -2,14 +2,24 @@
   "name": "gigachad",
   "displayName": "Gigachad",
   "description": "Extensão para executar comandos personalizados",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "RicardoFreitas",
+  "icon": "img/icon-giga.png",
+  "author": {
+    "name": "Ricardo Freitas",
+    "email": "freitasdev7@gmail.com"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Extension Packs",
     "Other"
+  ],
+  "keywords": [
+    "comandos",
+    "personalizados",
+    "gigachad",
+    "terminal"
   ],
   "activationEvents": [
     "onStartupFinished"

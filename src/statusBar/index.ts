@@ -14,7 +14,6 @@ export default class StatusBarItem implements vscode.Disposable {
     this.statusBar.command = "gigachad.showCommandMenu";
     this.statusBar.accessibilityInformation = {
       label: "GigaChad is ready to help you!",
-      role: "status",
     };
     this.statusBar.show();
   }

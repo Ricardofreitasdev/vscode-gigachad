@@ -3,23 +3,25 @@ import {
   getAvailableContainers,
   getCommandByCustomConfigurations,
   getPackageJsonScripts,
+  getPackageManager,
   getScriptListByCustomConfigurations,
   isCustomScript,
 } from "../actions";
 
-export async function selectScript() {
-  const containerOption = "Quero apenas usar um container";
-  const scriptOption = "Não quero usar um container";
-  const packageJsonScripts = getPackageJsonScripts();
-  const availableContainers = await getAvailableContainers();
-  const customScripts = getScriptListByCustomConfigurations();
-  const isDockerRunning = availableContainers.length > 0;
+const containerOption = "I just want to use a Docker container";
+const scriptOption = "I don't want to use a Docker container";
+const packageJsonScripts = getPackageJsonScripts();
+const customScripts = getScriptListByCustomConfigurations();
+const packageMaganer = getPackageManager();
 
+export async function selectScript() {
+  const availableContainers = await getAvailableContainers();
+  const isDockerRunning = availableContainers.length > 0;
   let selectedContainer = "";
 
   if (!packageJsonScripts.length && !customScripts.length) {
     vscode.window.showErrorMessage(
-      "Não foi possível encontrar scripts no package.json ou nas configurações do projeto."
+      "Could not find scripts in package.json or project configurations."
     );
     return;
   }
@@ -41,12 +43,12 @@ export async function selectScript() {
   });
 
   let selectedScript = await vscode.window.showQuickPick(prefixedOptions, {
-    placeHolder: "Selecione um script...",
-    title: "Selecione um script para executar",
+    placeHolder: "Select a script...",
+    title: "Select a script to run",
   });
 
   if (!selectedScript) {
-    vscode.window.showInformationMessage("Seleção cancelada.");
+    vscode.window.showInformationMessage("Selection canceled.");
     return;
   }
 
@@ -54,13 +56,13 @@ export async function selectScript() {
     selectedContainer = (await vscode.window.showQuickPick(
       [...availableContainers, scriptOption],
       {
-        placeHolder: "Selecione um container Docker para executar o script",
-        title: "Selecione um container Docker para executar o script",
+        placeHolder: "Select a Docker container to run the script",
+        title: "Select a Docker container to run the script",
       }
     )) as string;
 
     if (!selectedContainer) {
-      vscode.window.showInformationMessage("Seleção cancelada.");
+      vscode.window.showInformationMessage("Selection canceled.");
       return;
     }
   }
@@ -70,9 +72,7 @@ export async function selectScript() {
   const isOnlyContainer = selectedScript === containerOption;
 
   if (isOnlyContainer && selectedContainer === scriptOption) {
-    vscode.window.showInformationMessage(
-      "Nenhum script ou container selecionado."
-    );
+    vscode.window.showInformationMessage("No script or container selected.");
     return;
   }
 
@@ -90,31 +90,40 @@ export async function selectScript() {
   }
 
   const isOnlyScriptWithoutContainer = selectedContainer === scriptOption;
-  if (
-    (isCustomScript(selectedScript) && isOnlyScriptWithoutContainer) ||
-    (isCustomScript(selectedScript) && !selectedContainer)
-  ) {
+  const isCustomScriptWithoutContainer =
+    isCustomScript(selectedScript) &&
+    (isOnlyScriptWithoutContainer || !selectedContainer);
+
+  if (isCustomScriptWithoutContainer) {
     const command = getCommandByCustomConfigurations(`${selectedScript}`);
     terminal.sendText(command);
+    terminal.show();
+    return;
   }
 
-  if (
+  const isCustomScriptWithDocker =
     isCustomScript(selectedScript) &&
     !isOnlyScriptWithoutContainer &&
     isDockerRunning &&
-    selectedContainer
-  ) {
+    selectedContainer;
+
+  if (isCustomScriptWithDocker) {
     const command = getCommandByCustomConfigurations(`${selectedScript}`);
     terminal.sendText(
       `docker exec -it ${selectedContainer} bash -c "${command} && exec bash"`
     );
+    terminal.show();
+    return;
   }
 
-  if (isOnlyScriptWithoutContainer && !isCustomScript(selectedScript)) {
-    terminal.sendText(`npm run ${selectedScript}`);
+  if (
+    (isOnlyScriptWithoutContainer && !isCustomScript(selectedScript)) ||
+    (!isDockerRunning && selectedScript !== containerOption)
+  ) {
+    terminal.sendText(`${packageMaganer} run ${selectedScript}`);
   } else if (!isCustomScript(selectedScript)) {
     terminal.sendText(
-      `docker exec -it ${selectedContainer} bash -c "npm run ${selectedScript} && exec bash"`
+      `docker exec -it ${selectedContainer} bash -c "${packageMaganer} run ${selectedScript} && exec bash"`
     );
   }
 
