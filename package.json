@@ -1,8 +1,8 @@
 {
   "name": "gigachad",
-  "displayName": "Gigachad",
-  "description": "This is a VSCode extension that provides useful functionalities for developers. The extension automates and streamlines the execution of scripts, package manager detection, and Docker integration, all directly within your development environment.",
-  "version": "0.0.2",
+  "displayName": "Gigachad Scripts Runner",
+  "description": "Easy script execution from package.json or custom configurations, with optional Docker support.",
+  "version": "0.0.3",
   "publisher": "RicardoFreitas7",
   "icon": "img/icon-giga.png",
   "author": {
