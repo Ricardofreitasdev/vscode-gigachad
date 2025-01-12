@@ -12,12 +12,19 @@ Is a VS Code extension that simplifies running scripts defined in `package.json`
 - Support for running commands inside Docker containers.
 - Automatic detection of the package manager (`npm` or `yarn`).
 
-# Uso
+## Use
 
-<video controls width="600">
-  <source src="./img/gigachad-example.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+Find Gigachad icon in status bar
+
+![statusBar](img/bar.png)
+
+Select script to execute
+
+![panel](img/panel.png)
+
+See the result in the terminal
+
+![terminal](img/terminal.png)
 
 ### Example of Custom Configuration:
 
