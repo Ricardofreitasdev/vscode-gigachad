@@ -15,7 +15,7 @@ Is a VS Code extension that simplifies running scripts defined in `package.json`
 # Uso
 
 <video controls width="600">
-  <source src="./img/gigachad-example.webm" type="video/webm">
+  <source src="./img/gigachad-example.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
