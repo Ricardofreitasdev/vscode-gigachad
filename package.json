@@ -2,7 +2,7 @@
   "name": "gigachad",
   "displayName": "Gigachad Scripts Runner",
   "description": "Easy script execution from package.json or custom configurations, with optional Docker support.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "RicardoFreitas7",
   "icon": "img/icon-giga.png",
   "author": {
