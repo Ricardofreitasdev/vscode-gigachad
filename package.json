@@ -30,7 +30,18 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [],
+    "commands": [
+      {
+        "command": "gigachad.toggleFavorite",
+        "title": "Adicionar/Remover dos Favoritos",
+        "category": "Gigachad"
+      },
+      {
+        "command": "gigachad.viewHistory",
+        "title": "Ver Histórico",
+        "category": "Gigachad"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Comandos personalizados",
@@ -59,6 +70,16 @@
               "command"
             ]
           }
+        },
+        "gigachad.maxHistorySize": {
+          "type": "number",
+          "default": 20,
+          "description": "Número máximo de execuções no histórico"
+        },
+        "gigachad.maxFavoritesSize": {
+          "type": "number",
+          "default": 10,
+          "description": "Número máximo de scripts favoritos"
         }
       }
     }

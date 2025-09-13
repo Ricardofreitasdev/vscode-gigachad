@@ -40,11 +40,6 @@ In the VSCode configuration file (`settings.json`), add the custom scripts you w
 ]
 ```
 
-Here’s the table in Markdown format explaining the JSON configuration in English:
-
-markdown
-Copiar código
-
 ### Explanation of the JSON Configuration
 
 | Field     | Description                                                                                                 | Example                       |
