@@ -22,16 +22,10 @@ export default class StatusBarItem implements vscode.Disposable {
   }
 
   private async updateStatusBar() {
-    const favorites = await this.historyService.getFavorites();
     const recentHistory = await this.historyService.getRecentHistory(1);
     
     let text = "$(terminal) Gigachad";
     let tooltip = "Gigachad está pronto para ajudar!";
-    
-    if (favorites.length > 0) {
-      text += ` $(star) ${favorites.length}`;
-      tooltip += `\n${favorites.length} favorito(s)`;
-    }
     
     if (recentHistory.length > 0) {
       const lastExec = recentHistory[0];

@@ -1,11 +1,11 @@
 import * as vscode from 'vscode';
-import { ScriptExecution, FavoriteScript, ScriptHistoryConfig } from '../types/scriptHistory';
+import { ScriptExecution, ScriptHistoryConfig } from '../types/scriptHistory';
 
 export class ScriptHistoryService {
   private static instance: ScriptHistoryService;
   private configKey = 'gigachad.scriptHistory';
   private defaultConfig: ScriptHistoryConfig = {
-    favorites: [],
+    favorites: [], // Mantém para compatibilidade, mas não será usado
     history: [],
     maxHistorySize: 20,
     maxFavoritesSize: 10
@@ -35,80 +35,40 @@ export class ScriptHistoryService {
   ): Promise<void> {
     const config = await this.getConfig();
     const workspace = this.getCurrentWorkspace();
-    
-    const execution: ScriptExecution = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      scriptName,
-      scriptType,
-      command,
-      timestamp: Date.now(),
-      success,
-      duration,
-      workspace
-    };
 
-    // Adicionar ao histórico
-    config.history.unshift(execution);
-    
-    // Manter apenas os últimos N registros
-    config.history = config.history.slice(0, config.maxHistorySize);
-    
-    // Incrementar contador de uso se for favorito
-    const favorite = config.favorites.find(f => 
-      f.scriptName === scriptName && 
-      f.workspace === workspace
-    );
-    if (favorite) {
-      favorite.usageCount++;
-    }
-
-    await this.saveConfig(config);
-  }
-
-  // Adicionar/remover favorito
-  async toggleFavorite(scriptName: string, scriptType: 'package' | 'custom'): Promise<boolean> {
-    const config = await this.getConfig();
-    const workspace = this.getCurrentWorkspace();
-    
-    const existingIndex = config.favorites.findIndex(f => 
-      f.scriptName === scriptName && 
-      f.workspace === workspace
+    // Verifica se já existe execução igual no histórico
+    const existingIndex = config.history.findIndex(
+      h => h.scriptName === scriptName && h.scriptType === scriptType && h.workspace === workspace
     );
 
     if (existingIndex >= 0) {
-      // Remover dos favoritos
-      config.favorites.splice(existingIndex, 1);
-      await this.saveConfig(config);
-      return false;
+      // Atualiza o registro existente e move para o topo
+      const existing = config.history[existingIndex];
+      existing.timestamp = Date.now();
+      existing.command = command;
+      existing.success = success;
+      existing.duration = duration;
+      config.history.splice(existingIndex, 1);
+      config.history.unshift(existing);
     } else {
-      // Adicionar aos favoritos
-      if (config.favorites.length >= config.maxFavoritesSize) {
-        // Remover o menos usado
-        config.favorites.sort((a, b) => a.usageCount - b.usageCount);
-        config.favorites.shift();
-      }
-      
-      config.favorites.push({
+      // Adiciona novo registro normalmente
+      const execution: ScriptExecution = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         scriptName,
         scriptType,
-        addedAt: Date.now(),
-        usageCount: 0,
+        command,
+        timestamp: Date.now(),
+        success,
+        duration,
         workspace
-      });
-      
-      await this.saveConfig(config);
-      return true;
+      };
+      config.history.unshift(execution);
     }
-  }
 
-  // Obter scripts favoritos
-  async getFavorites(): Promise<FavoriteScript[]> {
-    const config = await this.getConfig();
-    const workspace = this.getCurrentWorkspace();
-    
-    return config.favorites
-      .filter(f => f.workspace === workspace)
-      .sort((a, b) => b.usageCount - a.usageCount);
+    // Manter apenas os últimos N registros
+    config.history = config.history.slice(0, config.maxHistorySize);
+
+    await this.saveConfig(config);
   }
 
   // Obter histórico recente
@@ -121,28 +81,10 @@ export class ScriptHistoryService {
       .slice(0, limit);
   }
 
-  // Verificar se script é favorito
-  async isFavorite(scriptName: string): Promise<boolean> {
-    const config = await this.getConfig();
-    const workspace = this.getCurrentWorkspace();
-    
-    return config.favorites.some(f => 
-      f.scriptName === scriptName && 
-      f.workspace === workspace
-    );
-  }
-
   // Limpar histórico
   async clearHistory(): Promise<void> {
     const config = await this.getConfig();
     config.history = [];
-    await this.saveConfig(config);
-  }
-
-  // Limpar favoritos
-  async clearFavorites(): Promise<void> {
-    const config = await this.getConfig();
-    config.favorites = [];
     await this.saveConfig(config);
   }
 

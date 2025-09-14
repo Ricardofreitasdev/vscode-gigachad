@@ -19,7 +19,6 @@ interface ScriptOption {
   label: string;
   description?: string;
   value: string;
-  isFavorite?: boolean;
   isRecent?: boolean;
   scriptType?: 'package' | 'custom';
 }
@@ -39,16 +38,7 @@ export async function selectScript() {
     return;
   }
 
-  const favorites = await historyService.getFavorites();
   const recentHistory = await historyService.getRecentHistory();
-
-  const favoriteOptions: ScriptOption[] = favorites.map(fav => ({
-    label: `$(star-full) ${fav.scriptName}`,
-    description: `Favorito (usado ${fav.usageCount}x)`,
-    value: fav.scriptName,
-    isFavorite: true,
-    scriptType: fav.scriptType
-  }));
 
   const recentOptions: ScriptOption[] = recentHistory.map(exec => ({
     label: `$(history) ${exec.scriptName}`,
@@ -70,7 +60,6 @@ export async function selectScript() {
       label: isCustom ? `$(gear) ${option}` : 
              isPackage ? `$(json) ${option}` : option,
       value: option,
-      isFavorite: false,
       isRecent: false,
       scriptType: isCustom ? 'custom' : 'package'
     };
@@ -78,19 +67,14 @@ export async function selectScript() {
 
   // Combinar todas as opções
   const allOptions = [
-    ...favoriteOptions,
-    ...(recentOptions.filter(recent => 
-      !favorites.some(fav => fav.scriptName === recent.value)
-    )),
+    ...recentOptions,
     ...regularOptions.filter(regular => 
-      !favorites.some(fav => fav.scriptName === regular.value) &&
       !recentHistory.some(recent => recent.scriptName === regular.value)
     )
   ];
 
   // Adicionar opções de contexto
   const contextOptions: ScriptOption[] = [
-    { label: '$(star) Gerenciar Favoritos', value: 'manage-favorites' },
     { label: '$(history) Ver Histórico Completo', value: 'view-history' },
     { label: '$(trash) Limpar Histórico', value: 'clear-history' }
   ];
@@ -113,11 +97,6 @@ export async function selectScript() {
   }
 
   // Lidar com opções de contexto
-  if (selectedItem.value === 'manage-favorites') {
-    await manageFavorites();
-    return;
-  }
-  
   if (selectedItem.value === 'view-history') {
     await viewFullHistory();
     return;
@@ -253,40 +232,6 @@ export async function selectScript() {
   }
 }
 
-async function manageFavorites() {
-  const historyService = ScriptHistoryService.getInstance();
-  const favorites = await historyService.getFavorites();
-  
-  if (favorites.length === 0) {
-    vscode.window.showInformationMessage("Nenhum script favorito encontrado.");
-    return;
-  }
-
-  const options = favorites.map(fav => ({
-    label: `$(star-full) ${fav.scriptName}`,
-    description: `Usado ${fav.usageCount}x - Adicionado ${formatTimeAgo(fav.addedAt)}`,
-    value: fav.scriptName
-  }));
-
-  const selected = await vscode.window.showQuickPick([
-    ...options,
-    { label: '$(trash) Limpar Todos os Favoritos', value: 'clear-all' }
-  ], {
-    placeHolder: "Gerenciar favoritos...",
-    title: "Favoritos"
-  });
-
-  if (selected?.value === 'clear-all') {
-    await historyService.clearFavorites();
-    vscode.window.showInformationMessage("Favoritos limpos!");
-  } else if (selected) {
-    const removed = await historyService.toggleFavorite(selected.value, 'package');
-    vscode.window.showInformationMessage(
-      removed ? "Adicionado aos favoritos!" : "Removido dos favoritos!"
-    );
-  }
-}
-
 async function viewFullHistory() {
   const historyService = ScriptHistoryService.getInstance();
   const history = await historyService.getRecentHistory(20);
@@ -332,8 +277,8 @@ function formatTimeAgo(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (days > 0) return `${days}d atrás`;
-  if (hours > 0) return `${hours}h atrás`;
-  if (minutes > 0) return `${minutes}min atrás`;
+  if (days > 0) {return `${days}d atrás`;}
+  if (hours > 0) {return `${hours}h atrás`;}
+  if (minutes > 0) {return `${minutes}min atrás`;}
   return "agora";
 }
