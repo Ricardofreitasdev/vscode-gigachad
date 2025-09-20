@@ -12,6 +12,8 @@ export default class StatusBarItem implements vscode.Disposable {
       100
     );
     this.statusBar.name = "Gigachad";
+    this.statusBar.text = "$(terminal) Gigachad";
+    this.statusBar.tooltip = "Gigachad está pronto para ajudar!";
     this.statusBar.command = "gigachad.showCommandMenu";
     this.statusBar.accessibilityInformation = {
       label: "GigaChad is ready to help you!",
@@ -24,7 +26,6 @@ export default class StatusBarItem implements vscode.Disposable {
   private async updateStatusBar() {
     const recentHistory = await this.historyService.getRecentHistory(1);
     
-    let text = "$(terminal) Gigachad";
     let tooltip = "Gigachad está pronto para ajudar!";
     
     if (recentHistory.length > 0) {
@@ -32,7 +33,6 @@ export default class StatusBarItem implements vscode.Disposable {
       tooltip += `\nÚltima execução: ${lastExec.scriptName}`;
     }
     
-    this.statusBar.text = text;
     this.statusBar.tooltip = tooltip;
   }
 

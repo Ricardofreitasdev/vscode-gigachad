@@ -57,8 +57,8 @@ function formatTimeAgo(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (days > 0) {return `${days}d atrás`;}
-  if (hours > 0) {return `${hours}h atrás`;}
-  if (minutes > 0) {return `${minutes}min atrás`;}
+  if (days > 0) return `${days}d atrás`;
+  if (hours > 0) return `${hours}h atrás`;
+  if (minutes > 0) return `${minutes}min atrás`;
   return "agora";
 }

@@ -5,10 +5,8 @@ export class ScriptHistoryService {
   private static instance: ScriptHistoryService;
   private configKey = 'gigachad.scriptHistory';
   private defaultConfig: ScriptHistoryConfig = {
-    favorites: [], // Mantém para compatibilidade, mas não será usado
     history: [],
-    maxHistorySize: 20,
-    maxFavoritesSize: 10
+    maxHistorySize: 20
   };
   private context: vscode.ExtensionContext | null = null;
 
@@ -35,36 +33,32 @@ export class ScriptHistoryService {
   ): Promise<void> {
     const config = await this.getConfig();
     const workspace = this.getCurrentWorkspace();
-
-    // Verifica se já existe execução igual no histórico
-    const existingIndex = config.history.findIndex(
-      h => h.scriptName === scriptName && h.scriptType === scriptType && h.workspace === workspace
+    
+    // Verificar se já existe uma entrada para este script no histórico
+    const existingIndex = config.history.findIndex(h => 
+      h.scriptName === scriptName && 
+      h.workspace === workspace
     );
 
+    const execution: ScriptExecution = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      scriptName,
+      scriptType,
+      command,
+      timestamp: Date.now(),
+      success,
+      duration,
+      workspace
+    };
+
     if (existingIndex >= 0) {
-      // Atualiza o registro existente e move para o topo
-      const existing = config.history[existingIndex];
-      existing.timestamp = Date.now();
-      existing.command = command;
-      existing.success = success;
-      existing.duration = duration;
-      config.history.splice(existingIndex, 1);
-      config.history.unshift(existing);
+      // Atualizar entrada existente
+      config.history[existingIndex] = execution;
     } else {
-      // Adiciona novo registro normalmente
-      const execution: ScriptExecution = {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        scriptName,
-        scriptType,
-        command,
-        timestamp: Date.now(),
-        success,
-        duration,
-        workspace
-      };
+      // Adicionar nova entrada no início
       config.history.unshift(execution);
     }
-
+    
     // Manter apenas os últimos N registros
     config.history = config.history.slice(0, config.maxHistorySize);
 

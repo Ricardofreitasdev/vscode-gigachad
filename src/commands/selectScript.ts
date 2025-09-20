@@ -38,8 +38,10 @@ export async function selectScript() {
     return;
   }
 
+  // Obter histórico recente
   const recentHistory = await historyService.getRecentHistory();
 
+  // Construir opções com histórico recente no topo
   const recentOptions: ScriptOption[] = recentHistory.map(exec => ({
     label: `$(history) ${exec.scriptName}`,
     description: `Executado ${formatTimeAgo(exec.timestamp)}`,
@@ -65,7 +67,7 @@ export async function selectScript() {
     };
   });
 
-  // Combinar todas as opções
+  // Combinar todas as opções (histórico primeiro)
   const allOptions = [
     ...recentOptions,
     ...regularOptions.filter(regular => 
@@ -107,9 +109,11 @@ export async function selectScript() {
     return;
   }
 
+  // Determinar o tipo do script
   const scriptType: 'package' | 'custom' = selectedItem.scriptType || 
     (isCustomScript(selectedItem.value) ? 'custom' : 'package');
 
+  // Docker container selection
   if (isDockerRunning) {
     selectedContainer = (await vscode.window.showQuickPick(
       [...availableContainers, scriptOption],
@@ -125,6 +129,7 @@ export async function selectScript() {
     }
   }
 
+  // Executar script
   const selectedScript = selectedItem.value;
   const duration = Date.now() - startTime;
   
@@ -158,6 +163,7 @@ export async function selectScript() {
       terminal.sendText(command);
       terminal.show();
       
+      // Registrar execução bem-sucedida
       await historyService.recordExecution(
         selectedScript,
         scriptType,
@@ -181,6 +187,7 @@ export async function selectScript() {
       );
       terminal.show();
       
+      // Registrar execução bem-sucedida
       await historyService.recordExecution(
         selectedScript,
         scriptType,
@@ -198,6 +205,7 @@ export async function selectScript() {
       const command = `${packageMaganer} run ${selectedScript}`;
       terminal.sendText(command);
       
+      // Registrar execução bem-sucedida
       await historyService.recordExecution(
         selectedScript,
         scriptType,
@@ -209,6 +217,7 @@ export async function selectScript() {
       const command = `docker exec -it ${selectedContainer} bash -c "${packageMaganer} run ${selectedScript} && exec bash"`;
       terminal.sendText(command);
       
+      // Registrar execução bem-sucedida
       await historyService.recordExecution(
         selectedScript,
         scriptType,
@@ -221,6 +230,7 @@ export async function selectScript() {
     terminal.show();
     
   } catch (error) {
+    // Registrar execução com erro
     await historyService.recordExecution(
       selectedScript,
       scriptType,
@@ -232,6 +242,7 @@ export async function selectScript() {
   }
 }
 
+// Funções auxiliares
 async function viewFullHistory() {
   const historyService = ScriptHistoryService.getInstance();
   const history = await historyService.getRecentHistory(20);
@@ -253,6 +264,7 @@ async function viewFullHistory() {
   });
 
   if (selected) {
+    // Re-executar script selecionado
     await selectScript();
   }
 }
@@ -277,8 +289,8 @@ function formatTimeAgo(timestamp: number): string {
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
 
-  if (days > 0) {return `${days}d atrás`;}
-  if (hours > 0) {return `${hours}h atrás`;}
-  if (minutes > 0) {return `${minutes}min atrás`;}
+  if (days > 0) return `${days}d atrás`;
+  if (hours > 0) return `${hours}h atrás`;
+  if (minutes > 0) return `${minutes}min atrás`;
   return "agora";
 }
