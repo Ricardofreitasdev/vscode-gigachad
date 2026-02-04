@@ -8,10 +8,17 @@ import {
   getScriptListByCustomConfigurations,
   isCustomScript,
 } from "../actions";
+import {
+  CONTAINER_ONLY_OPTION,
+  NO_CONTAINER_OPTION,
+} from "../constants/options";
+import { resolveCommand } from "./resolveCommand";
 import { ScriptHistoryService } from "../services/ScriptHistoryService";
+import { AutoRunService } from "../services/AutoRunService";
+import { clearAutoRun, configureAutoRun } from "./autoRun";
 
-const containerOption = "I just want to use a Docker container";
-const scriptOption = "I don't want to use a Docker container";
+const containerOption = CONTAINER_ONLY_OPTION;
+const scriptOption = NO_CONTAINER_OPTION;
 const packageJsonScripts = getPackageJsonScripts();
 const customScripts = getScriptListByCustomConfigurations();
 const packageMaganer = getPackageManager();
@@ -78,9 +85,24 @@ export async function selectScript() {
   ];
 
   // Adicionar opções de contexto
+  const autoRunService = AutoRunService.getInstance();
+  const autoRunConfig = await autoRunService.getConfigForCurrentWorkspace();
+
   const contextOptions: ScriptOption[] = [
     { label: '$(history) Ver Histórico Completo', value: 'view-history' },
-    { label: '$(trash) Limpar Histórico', value: 'clear-history' }
+    { label: '$(trash) Limpar Histórico', value: 'clear-history' },
+    {
+      label: '$(play) Configurar Auto-run',
+      value: 'configure-auto-run',
+    },
+    ...(autoRunConfig
+      ? [
+          {
+            label: `$(debug-stop) Desativar Auto-run (${autoRunConfig.scriptName})`,
+            value: 'clear-auto-run',
+          },
+        ]
+      : []),
   ];
 
   const finalOptions = [
@@ -108,6 +130,16 @@ export async function selectScript() {
   
   if (selectedItem.value === 'clear-history') {
     await clearHistory();
+    return;
+  }
+
+  if (selectedItem.value === 'configure-auto-run') {
+    await configureAutoRun();
+    return;
+  }
+
+  if (selectedItem.value === 'clear-auto-run') {
+    await clearAutoRun();
     return;
   }
 
@@ -140,100 +172,58 @@ export async function selectScript() {
   const duration = Date.now() - startTime;
   
   try {
-    const isOnlyContainer = selectedScript === containerOption;
+    const resolved = resolveCommand({
+      selectedScript,
+      selectedContainer,
+      isDockerRunning,
+      containerShell,
+      packageManager: packageMaganer,
+      containerOption,
+      noContainerOption: scriptOption,
+    });
 
-    if (isOnlyContainer && selectedContainer === scriptOption) {
-      vscode.window.showInformationMessage("No script or container selected.");
+    if (!resolved) {
+      vscode.window.showErrorMessage("Não foi possível resolver o comando.");
+      return;
+    }
+
+    const action = await vscode.window.showQuickPick(
+      ["Executar", "Copiar comando", "Cancelar"],
+      {
+        placeHolder: "O que você quer fazer?",
+        title: "Gigachad Scripts Runner",
+      }
+    );
+
+    if (!action || action === "Cancelar") {
+      vscode.window.showInformationMessage("Ação cancelada.");
+      return;
+    }
+
+    if (action === "Copiar comando") {
+      await vscode.env.clipboard.writeText(resolved.command);
+      vscode.window.showInformationMessage("Comando copiado!");
       return;
     }
 
     const terminal = vscode.window.createTerminal({
       name: `🚀 [Gigachad]: ${
-        isOnlyContainer ? selectedContainer : selectedScript
+        resolved.isContainerOnly ? selectedContainer : selectedScript
       }`,
     });
 
-    if (isOnlyContainer && selectedContainer) {
-      terminal.sendText(`docker exec -it ${selectedContainer} ${containerShell}`);
-      terminal.show();
-      return;
-    }
-
-    const isOnlyScriptWithoutContainer = selectedContainer === scriptOption;
-    const isCustomScriptWithoutContainer =
-      isCustomScript(selectedScript) &&
-      (isOnlyScriptWithoutContainer || !selectedContainer);
-
-    if (isCustomScriptWithoutContainer) {
-      const command = getCommandByCustomConfigurations(`${selectedScript}`);
-      terminal.sendText(command);
-      terminal.show();
-      
-      // Registrar execução bem-sucedida
-      await historyService.recordExecution(
-        selectedScript,
-        scriptType,
-        command,
-        true,
-        duration
-      );
-      return;
-    }
-
-    const isCustomScriptWithDocker =
-      isCustomScript(selectedScript) &&
-      !isOnlyScriptWithoutContainer &&
-      isDockerRunning &&
-      selectedContainer;
-
-    if (isCustomScriptWithDocker) {
-      const command = getCommandByCustomConfigurations(`${selectedScript}`);
-      terminal.sendText(
-        `docker exec -it ${selectedContainer} ${containerShell} -c "${command} && exec ${containerShell}"`
-      );
-      terminal.show();
-      
-      // Registrar execução bem-sucedida
-      await historyService.recordExecution(
-        selectedScript,
-        scriptType,
-        command,
-        true,
-        duration
-      );
-      return;
-    }
-
-    if (
-      (isOnlyScriptWithoutContainer && !isCustomScript(selectedScript)) ||
-      (!isDockerRunning && selectedScript !== containerOption)
-    ) {
-      const command = `${packageMaganer} run ${selectedScript}`;
-      terminal.sendText(command);
-      
-      // Registrar execução bem-sucedida
-      await historyService.recordExecution(
-        selectedScript,
-        scriptType,
-        command,
-        true,
-        duration
-      );
-    } else if (!isCustomScript(selectedScript)) {
-      const command = `docker exec -it ${selectedContainer} ${containerShell} -c "${packageMaganer} run ${selectedScript} && exec ${containerShell}"`;
-      terminal.sendText(command);
-      
-      // Registrar execução bem-sucedida
-      await historyService.recordExecution(
-        selectedScript,
-        scriptType,
-        command,
-        true,
-        duration
-      );
-    }
-
+    terminal.sendText(resolved.command);
     terminal.show();
+
+    if (!resolved.isContainerOnly) {
+      await historyService.recordExecution(
+        selectedScript,
+        resolved.scriptType,
+        resolved.command,
+        true,
+        duration
+      );
+    }
     
   } catch (error) {
     // Registrar execução com erro

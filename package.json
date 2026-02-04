@@ -35,6 +35,16 @@
         "command": "gigachad.viewHistory",
         "title": "Ver Histórico",
         "category": "Gigachad"
+      },
+      {
+        "command": "gigachad.configureAutoRun",
+        "title": "Configurar Auto-run",
+        "category": "Gigachad"
+      },
+      {
+        "command": "gigachad.clearAutoRun",
+        "title": "Desativar Auto-run",
+        "category": "Gigachad"
       }
     ],
     "configuration": {

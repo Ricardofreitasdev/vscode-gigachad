@@ -26,6 +26,16 @@ See the result in the terminal
 
 ![terminal](img/terminal.png)
 
+You can also copy the resolved command before execution.
+
+### Auto-run on Project Open
+
+From the script picker, choose `Configurar Auto-run` and select:
+- which script to run
+- optional Docker container
+
+Next time you open the same project, the command will run automatically without asking.
+
 ### Example of Custom Configuration:
 
 In the VSCode configuration file (`settings.json`), add the custom scripts you want to execute. Here is an example:
