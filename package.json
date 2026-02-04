@@ -2,7 +2,8 @@
   "name": "gigachad",
   "displayName": "Gigachad Scripts Runner",
   "description": "Easy script execution from package.json or custom configurations, with optional Docker support.",
-  "version": "0.0.5",
+  "version": "0.0.6",
+  "license": "MIT",
   "publisher": "RicardoFreitas7",
   "icon": "img/icon-giga.png",
   "author": {
@@ -34,6 +35,16 @@
       {
         "command": "gigachad.viewHistory",
         "title": "Ver Histórico",
+        "category": "Gigachad"
+      },
+      {
+        "command": "gigachad.configureAutoRun",
+        "title": "Configurar Auto-run",
+        "category": "Gigachad"
+      },
+      {
+        "command": "gigachad.clearAutoRun",
+        "title": "Desativar Auto-run",
         "category": "Gigachad"
       }
     ],
