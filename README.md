@@ -47,3 +47,11 @@ In the VSCode configuration file (`settings.json`), add the custom scripts you w
 | `name`    | The name of the custom script that will appear in the VSCode interface.                                     | `"build:docker"`,             |
 | `command` | The command to be executed in the terminal when the script is triggered. It can be any valid shell command. | `"docker-compose up --build"` |
 | `group`   | (Optional) The group to which the script belongs. This helps in organizing scripts into categories.         | `"example-app"`               |
+
+### Container Shell Preference
+
+By default, the extension tries to use `bash` inside Docker containers and falls back to `sh` when `bash` is not available. You can set a preferred shell in VS Code settings:
+
+```json
+"gigachad.containerShell": "bash"
+```

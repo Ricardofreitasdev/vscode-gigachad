@@ -63,16 +63,53 @@ export function getPackageJsonScripts() {
   return packageJson.scripts ? Object.keys(packageJson.scripts) : [];
 }
 
-export async function getAvailableContainers(): Promise<string[]> {
+function execCommand(command: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    exec('docker ps --format "{{.Names}}"', (error, stdout, stderr) => {
+    exec(command, (error, stdout, stderr) => {
       if (error) {
-        reject(`Erro ao listar containers: ${stderr}`);
+        reject(new Error(stderr || error.message));
+        return;
       }
-      const containers = stdout.split("\n").filter(Boolean);
-      resolve(containers);
+      resolve(stdout);
     });
   });
+}
+
+export async function getAvailableContainers(): Promise<string[]> {
+  try {
+    const stdout = await execCommand('docker ps --format "{{.Names}}"');
+    return stdout.split("\n").filter(Boolean);
+  } catch (error) {
+    throw new Error(`Erro ao listar containers: ${String(error)}`);
+  }
+}
+
+type ContainerShell = "bash" | "sh";
+
+function getPreferredContainerShell(): ContainerShell | null {
+  const config = vscode.workspace.getConfiguration("gigachad");
+  const preferred = config.get<string>("containerShell");
+  if (preferred === "bash" || preferred === "sh") {
+    return preferred;
+  }
+  return null;
+}
+
+export async function getContainerShell(
+  containerName: string
+): Promise<ContainerShell> {
+  const preferred = getPreferredContainerShell() ?? "bash";
+
+  if (preferred === "sh") {
+    return "sh";
+  }
+
+  try {
+    await execCommand(`docker exec ${containerName} bash -c "exit 0"`);
+    return "bash";
+  } catch (_error) {
+    return "sh";
+  }
 }
 
 export function getWorkspaceFolder() {

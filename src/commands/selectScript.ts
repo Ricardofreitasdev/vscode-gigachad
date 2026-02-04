@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import {
   getAvailableContainers,
+  getContainerShell,
   getCommandByCustomConfigurations,
   getPackageJsonScripts,
   getPackageManager,
@@ -30,6 +31,7 @@ export async function selectScript() {
   const availableContainers = await getAvailableContainers();
   const isDockerRunning = availableContainers.length > 0;
   let selectedContainer = "";
+  let containerShell: "bash" | "sh" = "bash";
 
   if (!packageJsonScripts.length && !customScripts.length) {
     vscode.window.showErrorMessage(
@@ -127,6 +129,10 @@ export async function selectScript() {
       vscode.window.showInformationMessage("Selection canceled.");
       return;
     }
+
+    if (selectedContainer !== scriptOption) {
+      containerShell = await getContainerShell(selectedContainer);
+    }
   }
 
   // Executar script
@@ -148,7 +154,7 @@ export async function selectScript() {
     });
 
     if (isOnlyContainer && selectedContainer) {
-      terminal.sendText(`docker exec -it ${selectedContainer} bash`);
+      terminal.sendText(`docker exec -it ${selectedContainer} ${containerShell}`);
       terminal.show();
       return;
     }
@@ -183,7 +189,7 @@ export async function selectScript() {
     if (isCustomScriptWithDocker) {
       const command = getCommandByCustomConfigurations(`${selectedScript}`);
       terminal.sendText(
-        `docker exec -it ${selectedContainer} bash -c "${command} && exec bash"`
+        `docker exec -it ${selectedContainer} ${containerShell} -c "${command} && exec ${containerShell}"`
       );
       terminal.show();
       
@@ -214,7 +220,7 @@ export async function selectScript() {
         duration
       );
     } else if (!isCustomScript(selectedScript)) {
-      const command = `docker exec -it ${selectedContainer} bash -c "${packageMaganer} run ${selectedScript} && exec bash"`;
+      const command = `docker exec -it ${selectedContainer} ${containerShell} -c "${packageMaganer} run ${selectedScript} && exec ${containerShell}"`;
       terminal.sendText(command);
       
       // Registrar execução bem-sucedida
