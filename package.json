@@ -70,6 +70,15 @@
           "type": "number",
           "default": 20,
           "description": "Número máximo de execuções no histórico"
+        },
+        "gigachad.containerShell": {
+          "type": "string",
+          "default": "bash",
+          "enum": [
+            "bash",
+            "sh"
+          ],
+          "description": "Shell preferido para executar comandos dentro do container. Se bash não existir, faz fallback para sh."
         }
       }
     }
